@@ -12,14 +12,14 @@ export default class UserService {
     for (const user of users) {
       switch (user.type) {
         case "customer":
-          if (!this.checkCustomerValidityForErrors(user)) {
-            this.errors.push(user);
+          if (this.checkCustomerValidityForErrors(user)) {
+            break;
           }
           this.customers.push(user);
           break;
         case "employee":
-          if (!this.checkEmployeeValidityForErrors(user)) {
-            this.errors.push(user);
+          if (this.checkEmployeeValidityForErrors(user)) {
+            break;
           }
           this.employees.push(user);
           break;
@@ -42,14 +42,12 @@ export default class UserService {
       }
     }
 
-    if (Number.isNaN(Number.parseInt(user.age))) {
+    if (Number.isNaN(Number.parseInt(+user.age))) {
       hasErrors = true;
       this.errors.push(
-         
         new DataError(`Validation problem. ${user.age} is not a number`, user)
       );
     }
-
     return hasErrors;
   }
 
@@ -64,19 +62,59 @@ export default class UserService {
         );
       }
     }
+    if (Number.isNaN(Number.parseInt(user.age))) {
+      hasErrors = true;
+      this.errors.push(
+        new DataError(`Validation problem. ${user.age} is not a number`, user)
+      );
+    }
     return hasErrors;
   }
 
   add(user) {
-    // this.users.push(user);
+    switch (user.type) {
+      case "customer":
+        if (this.checkCustomerValidityForErrors(user)) {
+          break;
+        }
+        this.customers.push(user);
+        break;
+      case "employee":
+        if (this.checkEmployeeValidityForErrors(user)) {
+          break;
+        }
+        this.employees.push(user);
+        break;
+      default:
+        this.errors.push(
+          new DataError("This user cannot be added wrong user type", user)
+        );
+        break;
+    }
     this.loggerService.log(user);
   }
 
-  list() {
-    // return this.users;
+  listCustomers() {
+    return this.customers;
+  }
+
+  listEmployees() {
+    return this.employees;
   }
 
   geyById(id) {
-    // return this.users.find((u) => u.id == id);
+    return this.users.find((u) => u.id == id);
+  }
+
+  getCustomersSorted() {
+    return this.customers.sort((customer1, customer2) => {
+      if (customer1.firstName < customer2.firstName) {
+        return -1;
+      } else if (customer1.firstName === customer2.firstName) {
+        return 0;
+      } else {
+        return 1;
+      }
+    });
   }
 }
